@@ -13,7 +13,7 @@ import {
   Smartphone,
   Terminal,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 
 type Lang = "en" | "ru" | "kz";
 
@@ -317,20 +317,38 @@ const navItems = [
   ["contact", "contact"],
 ] as const;
 
-export default function Home() {
-  const [lang, setLang] = useState<Lang>(() => {
+const languageStore = {
+  getSnapshot: (): Lang => {
     if (typeof window === "undefined") {
       return "en";
     }
 
-    const savedLang = window.localStorage.getItem("resume-lang") as Lang | null;
-    return savedLang && ["en", "ru", "kz"].includes(savedLang) ? savedLang : "en";
-  });
+    const savedLang = window.localStorage.getItem("resume-lang");
+    return savedLang === "ru" || savedLang === "kz" ? savedLang : "en";
+  },
+  getServerSnapshot: (): Lang => "en",
+  subscribe: (callback: () => void) => {
+    window.addEventListener("storage", callback);
+    window.addEventListener("resume-lang-change", callback);
+
+    return () => {
+      window.removeEventListener("storage", callback);
+      window.removeEventListener("resume-lang-change", callback);
+    };
+  },
+};
+
+export default function Home() {
+  const lang = useSyncExternalStore(
+    languageStore.subscribe,
+    languageStore.getSnapshot,
+    languageStore.getServerSnapshot,
+  );
   const t = dictionaries[lang];
 
   const changeLang = (nextLang: Lang) => {
-    setLang(nextLang);
     window.localStorage.setItem("resume-lang", nextLang);
+    window.dispatchEvent(new Event("resume-lang-change"));
   };
 
   const dots = useMemo(() => mapDots.split(""), []);
