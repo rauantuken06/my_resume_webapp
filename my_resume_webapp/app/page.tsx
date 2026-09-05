@@ -13,7 +13,7 @@ import {
   Smartphone,
   Terminal,
 } from "lucide-react";
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 type Lang = "en" | "ru" | "kz";
 
@@ -417,6 +417,7 @@ export default function Home() {
               <span
                 key={index}
                 className={`map-dot ${dot === "0" ? "hide" : index % 5 === 0 ? "dim" : ""}`}
+                style={{ "--dot-index": index} as React.CSSProperties}
               />  
             ))}
           </div>
@@ -573,11 +574,14 @@ function Section({
   return (
     <section id={id} className="section">
       <div className="container">
-        <div className="section-header">
-          <p className="section-kicker">{kicker}</p>
-          <h2 className="section-title">{title}</h2>
-        </div>
-        {children}
+        <Reveal>
+          <div className="section-header">
+            <p className="section-kicker">{kicker}</p>
+            <h2 className="section-title">{title}</h2>
+          </div>
+        </Reveal>
+
+        <Reveal delay={120}>{children}</Reveal>
       </div>
     </section>
   );
@@ -602,16 +606,61 @@ function SkillCard({
   items: string[];
 }) {
   return (
-    <article className="info-card">
-      <div className="card-icon">{icon}</div>
-      <h3 className="card-title">{title}</h3>
-      <div className="badge-row">
-        {items.map((item) => (
-          <span className="skill-badge" key={item}>
-            {item}
-          </span>
-        ))}
-      </div>
-    </article>
-  )
+    <Reveal>
+      <article className="info-card">
+        <div className="card-icon">{icon}</div>
+        <h3 className="card-title">{title}</h3>
+        <div className="badge-row">
+          {items.map((item) => (
+            <span className="skill-badge" key={item}>
+              {item}
+            </span>
+          ))}
+        </div>
+      </article>
+    </Reveal>  
+  );
+}
+
+function Reveal({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+
+    if (!node) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.unobserve(node);
+        }
+      },
+      { threshold: 0.16 },
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={` reveal ${visible ? "reveal-visible" : ""}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>  
+  );
 }
