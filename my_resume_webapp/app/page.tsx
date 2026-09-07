@@ -657,7 +657,7 @@ function Reveal({
   return (
     <div
       ref={ref}
-      className={` reveal ${visible ? "reveal-visible" : ""}`}
+      className={`reveal ${visible ? "reveal-visible" : ""}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
       {children}
