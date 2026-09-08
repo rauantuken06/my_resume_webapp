@@ -355,6 +355,7 @@ export default function Home() {
 
   return (
     <main className="page-shell">
+      <MouseTrail />
       <header className="header">
         <div className="container header-inner">
           <a className="brand" href="#top" aria-label="Rauan Tuken home">
@@ -558,6 +559,122 @@ export default function Home() {
       </footer>
     </main>
   );
+}
+
+function MouseTrail() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+
+    if (!canvas) {
+      return;
+    }
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      return;
+    }
+
+    type TrailPoint = {
+      x: number;
+      y: number;
+      age: number;
+      life: number;
+    };
+
+    let animationFrame = 0;
+    let lastPoint: TrailPoint | null = null;
+    const points: TrailPoint[] = [];
+
+    const resize = () => {
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+      
+      canvas.width = Math.floor(window.innerWidth * pixelRatio);
+      canvas.height = Math.floor(window.innerHeight * pixelRatio);
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+
+      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    };
+
+    const addPoint = (event: PointerEvent) => {
+      const nextPoint = {
+        x: event.clientX,
+        y: event.clientY,
+        age: 0,
+        life: 40,
+      };
+
+      if (!lastPoint) {
+        points.push(nextPoint);
+        lastPoint = nextPoint;
+        return;
+      }
+
+      const distance = Math.hypot(nextPoint.x - lastPoint.x, nextPoint.y - lastPoint.y);
+
+      if (distance > 6) {
+        points.push(nextPoint);
+        lastPoint = nextPoint;
+      }
+    };
+
+    const draw = () => {
+      context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      context.globalCompositeOperation = "lighter";
+
+      for (let index = points.length - 1; index >= 0; index -= 1) {
+        const point = points[index];
+
+        point.age += 1;
+
+        const progress = point.age / point.life;
+        const opacity = Math.max(0, 1 - progress);
+        const radius = 24 + progress * 52;
+
+        const gradient = context.createRadialGradient(
+          point.x,
+          point.y,
+          0,
+          point.x,
+          point.y,
+          radius,
+        );
+
+        gradient.addColorStop(0, `rgba(243, 243, 243, ${0.34 * opacity})`);
+        gradient.addColorStop(0.36, `rgba(111, 103, 89, ${0.24 * opacity})`);
+        gradient.addColorStop(1, "rgba(16, 16, 16, 0)");
+
+        context.fillStyle = gradient;
+        context.beginPath();
+        context.arc(point.x, point.y, radius, 0, Math.PI * 2);
+        context.fill();
+
+        if (point.age >= point.life) {
+          points.splice(index, 1);
+        }
+      }
+
+      context.globalCompositeOperation = "source-over";
+      animationFrame = window.requestAnimationFrame(draw);
+    };
+
+    resize();
+    draw();
+
+    window.addEventListener("resize", resize);
+    window.addEventListener("pointermove", addPoint);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("pointermove", addPoint);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="mouse-trail" aria-hidden="true" />;
 }
 
 function Section({

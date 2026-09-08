@@ -56,6 +56,23 @@ a {
   background: var(--color-obsidian);
 }
 
+.mouse-trail {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 1;
+  mix-blend-mode: screen;
+}
+
+.header,
+.hero,
+.section,
+.footer {
+  position: relative;
+  z-index: 1;
+}
+
 .container {
   width: min(100% - 32px, var(--page-max-width));
   margin: 0 auto;
@@ -173,7 +190,7 @@ a {
 
 .primary-button:hover svg,
 .secondary-button:hover svg {
-  transform: translateY(2px, -2px);
+  transform: translate(2px, -2px);
 }
 .hero {
   padding: 104px 0 8px;
@@ -744,5 +761,9 @@ a {
   .reveal {
     opacity: 1;
     transform: none;
+  }
+
+  .mouse-trial {
+    display: none;
   }
 }
