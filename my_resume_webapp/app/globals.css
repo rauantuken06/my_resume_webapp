@@ -166,6 +166,15 @@ a {
   color: var(--color-obsidian);
 }
 
+.primary-button svg,
+.secondary-button svg {
+  transition: transform 180ms ease;
+}
+
+.primary-button:hover svg,
+.secondary-button:hover svg {
+  transform: translateY(2px, -2px);
+}
 .hero {
   padding: 104px 0 8px;
   border-bottom: 1px solid var(--color-graphite);
@@ -193,6 +202,7 @@ a {
   height: 6px;
   border-radius: 99px;
   background: var(--color-pulse-green);
+  animation: statusPulse 1800ms ease-in-out infinite;
 }
 
 .hero-content {
@@ -374,6 +384,12 @@ a {
   line-height: 1;
 }
 
+.skill-badge:hover {
+  border-color: var(--color-iron);
+  color: var(--color-chalk);
+  background: rgba(255, 255, 255, 0.3);
+}
+
 .timeline-item {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -450,6 +466,10 @@ a {
   flex-direction: column;
   justify-content: space-between;
   color: var(--color-chalk);
+}
+
+.contact-link:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .contact-link:last-child {
@@ -533,6 +553,7 @@ a {
 }
 
 .about-grid,
+.card-grid,
 .timeline,
 .project-card,
 .contact-grid {
@@ -541,6 +562,7 @@ a {
 }
 
 .about-grid::before,
+.card-grid::before,
 .timeline::before,
 .project-card::before,
 .contact-grid::before {
@@ -560,6 +582,29 @@ a {
   animation: iconBreath 3200ms ease-in-out infinite;
 }
 
+
+.nav a {
+  position: relative;
+}
+
+.nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  width: 100%;
+  height: 1px;
+  background: var(--color-chalk);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 220ms ease;
+}
+
+.nav a:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
 @keyframes borderGlow {
   0% {
     opacity: 0.14;
@@ -576,6 +621,7 @@ a {
     border-color: rgba(255, 255, 255, 0.28);
   }
 }
+
 @keyframes iconBreath {
   0%,
   100% {
@@ -584,6 +630,19 @@ a {
 
   50% {
     opacity: 1;
+  }
+}
+
+@keyframes statusPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.45);
   }
 }
 
