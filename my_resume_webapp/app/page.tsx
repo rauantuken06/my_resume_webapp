@@ -5,6 +5,7 @@ import {
   BookOpen,
   BriefcaseBusiness,
   Code2,
+  Copy,
   GitBranch,
   GraduationCap,
   Languages,
@@ -295,6 +296,8 @@ const skills = {
   ],
 };
 
+const projectTech = ["Angular", "TypeScript", "Django", "REST API"];
+
 const mapDots =
   "0000001110000000000000111000000000" +
   "0000111111100000000001111110000000" +
@@ -316,6 +319,8 @@ const navItems = [
   ["education", "education"],
   ["contact", "contact"],
 ] as const;
+
+const sectionIds = ["about", "skills", "experience", "projects", "education", "contact"] as const;
 
 const languageStore = {
   getSnapshot: (): Lang => {
@@ -346,15 +351,69 @@ export default function Home() {
   );
   const t = dictionaries[lang];
 
+  const [activeSection, setActiveSection] = useState<(typeof sectionIds)[number]>("about");
+  const [copied, setCopied] = useState(false);
+  const progressRef = useRef<HTMLDivElement | null>(null);
+
   const changeLang = (nextLang: Lang) => {
     window.localStorage.setItem("resume-lang", nextLang);
     window.dispatchEvent(new Event("resume-lang-change"));
+  };
+
+  useEffect(() => {
+    const updateScrollState = () => {
+      const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = scrollableHeight > 0 ? window.scrollY / scrollableHeight : 0;
+
+      if (progressRef.current) {
+        progressRef.current.style.transform = `scaleX(${Math.max(progress, 0), 1})`;
+      }
+
+      let currentSection: (typeof sectionIds)[number] = "about";
+
+      for (const id of sectionIds) {
+        const element = document.getElementById(id);
+
+        if (!element) {
+          continue;
+        }
+
+        const rect = element.getBoundingClientRect();
+
+        if (rect.top <= 160) {
+          currentSection = id;
+        }
+      };  
+
+      setActiveSection(currentSection);
+    };
+      
+
+    updateScrollState();
+
+    window.addEventListener("scroll", updateScrollState, {passive: true});
+    window.addEventListener("resize", updateScrollState);
+
+    return () => {
+      window.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, []);
+
+  const copyEmail = async () => {
+    await navigator.clipboard.writeText("rauantuken3@gmail.com");
+    setCopied(true);
+
+    window.setTimeout(() => {
+      setCopied(false);
+    }, 1600);
   };
 
   const dots = useMemo(() => mapDots.split(""), []);
 
   return (
     <main className="page-shell">
+      <div className="scroll-progress" ref={progressRef} />
       <MouseTrail />
       <header className="header">
         <div className="container header-inner">
@@ -604,7 +663,7 @@ function MouseTrail() {
         x: event.clientX,
         y: event.clientY,
         age: 0,
-        life: 40,
+        life: 58,
       };
 
       if (!lastPoint) {
@@ -615,7 +674,7 @@ function MouseTrail() {
 
       const distance = Math.hypot(nextPoint.x - lastPoint.x, nextPoint.y - lastPoint.y);
 
-      if (distance > 6) {
+      if (distance > 2) {
         points.push(nextPoint);
         lastPoint = nextPoint;
       }
@@ -632,7 +691,30 @@ function MouseTrail() {
 
         const progress = point.age / point.life;
         const opacity = Math.max(0, 1 - progress);
-        const radius = 24 + progress * 52;
+        const radius = 18 + progress * 46;
+        const nextPoint = points[index + 1];
+
+        if (nextPoint) {
+          const lineGradient = context.createLinearGradient(
+            point.x,
+            point.y,
+            nextPoint.x,
+            nextPoint.y,
+          );
+
+          lineGradient.addColorStop(0, `rgba(243, 243, 243, ${0.16 * opacity})`);
+          lineGradient.addColorStop(0.5, `rgba(111, 103, 89, ${0.14 * opacity})`);
+          lineGradient.addColorStop(1, "rgba(243, 243, 243, 0)");
+
+          context.strokeStyle = lineGradient;
+          context.lineWidth = 18 * opacity;
+          context.lineCap = "round";
+          context.lineJoin = "round";
+          context.beginPath();
+          context.moveTo(point.x, point.y);
+          context.lineTo(nextPoint.x, nextPoint.y);
+          context.stroke();
+        }
 
         const gradient = context.createRadialGradient(
           point.x,
