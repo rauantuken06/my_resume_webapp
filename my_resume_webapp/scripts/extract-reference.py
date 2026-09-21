@@ -29,6 +29,19 @@ def main() -> None:
 
     cols = range(ORIGIN_X, width - CELL_X + 1, CELL_X)
 
+    # Normalise tone against the largest dot in the image, so a fully lit cell
+    # is level 15 and the level maps straight onto dot radius.
+    peak = 0.0
+    for row in range(MAP_ROWS):
+        band = lum[ORIGIN_Y + row * CELL_Y : ORIGIN_Y + (row + 1) * CELL_Y]
+        for x in cols:
+            cell = band[:, x : x + CELL_X]
+            if float(cell.max()) > INK_THRESHOLD:
+                peak = max(peak, float(cell.sum()))
+
+    # Half-diagonal, in reference pixels, of a diamond holding the peak ink.
+    max_radius = (peak / 255.0 / 2.0) ** 0.5
+
     lines = []
     for row in range(MAP_ROWS):
         band = lum[ORIGIN_Y + row * CELL_Y : ORIGIN_Y + (row + 1) * CELL_Y]
@@ -36,18 +49,24 @@ def main() -> None:
         for x in cols:
             # Sample exactly one cell. A wider window would let neighbouring
             # dots leak in, since the horizontal pitch is only four pixels.
-            value = float(band[:, x : x + CELL_X].max())
-            if value <= INK_THRESHOLD:
+            cell = band[:, x : x + CELL_X]
+            if float(cell.max()) <= INK_THRESHOLD:
                 line.append(".")
             else:
-                level = max(1, min(15, round(value / 255 * 15)))
+                # Tone is carried by how much ink the cell holds, not by how
+                # bright its brightest pixel is: this is a halftone, so a dark
+                # region is drawn with small dots rather than dim ones. Ink is
+                # what recovers the shading inside the hands.
+                ink = float(cell.sum()) / peak
+                level = max(1, min(15, round(ink ** 0.5 * 15)))
                 line.append(chr(65 + level))
         lines.append("".join(line))
 
     body = ",\n".join('  "%s"' % line for line in lines)
-    Path = open(TARGET, "w", encoding="utf-8")
-    Path.write(TEMPLATE % (CELL_X, CELL_Y, len(lines[0]), len(lines), body))
-    Path.close()
+    out = open(TARGET, "w", encoding="utf-8")
+    out.write(TEMPLATE % (CELL_X, CELL_Y, round(max_radius, 3), len(lines[0]), len(lines), body))
+    out.close()
+    print("peak cell ink %.0f -> max dot radius %.2f reference px" % (peak, max_radius))
     print("wrote %s (%d rows x %d cols)" % (TARGET, len(lines), len(lines[0])))
 
 
@@ -57,8 +76,12 @@ TEMPLATE = '''/**
  * This is not a drawing of hands and not an anatomical model. It is the
  * reference image's own dot field, read straight off the source: the image
  * lays its dots on a lattice 4px wide by 8px tall, and each cell below records
- * whether that lattice position carries a dot and how bright it is. Rendering
- * this map reproduces the reference, shading included, at any scale.
+ * whether that lattice position carries a dot and how much ink it holds.
+ *
+ * Tone is carried by dot SIZE, the way a printed halftone works: the shadows
+ * inside the hands are drawn with small dots, the lit surfaces with large
+ * ones. Rendering this map reproduces the reference, shading included, at any
+ * scale.
  *
  * Regenerate with scripts/extract-reference.py if the source image changes.
  */
@@ -66,6 +89,13 @@ TEMPLATE = '''/**
 /** Lattice cell size in reference pixels. Dots are wider than they are tall. */
 export const CELL_X = %d;
 export const CELL_Y = %d;
+
+/**
+ * Half-diagonal of the largest dot in the reference, in reference pixels.
+ * A cell at level 15 is drawn this big; smaller levels scale down linearly,
+ * which is what renders the shadows inside the hands.
+ */
+export const MAX_DOT_RADIUS = %s;
 
 export const MAP_COLS = %d;
 export const MAP_ROWS = %d;
@@ -75,8 +105,9 @@ export const VIEW_WIDTH = MAP_COLS * CELL_X;
 export const VIEW_HEIGHT = MAP_ROWS * CELL_Y;
 
 /**
- * One character per lattice cell, row-major. A dot is "B" (dimmest) through
- * "P" (full brightness); "." is an empty cell.
+ * One character per lattice cell, row-major. A dot is "B" (smallest, deepest
+ * shadow) through "P" (largest, fully lit); "." is an empty cell. The value is
+ * the square root of the cell's ink, so it maps linearly to dot radius.
  */
 export const MAP = [
 %s
