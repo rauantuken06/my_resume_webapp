@@ -254,27 +254,15 @@ a {
   margin-top: 32px;
 }
 
-.dot-map {
-  width: min(100%, 980px);
-  margin: 72px auto 0;
-  display: grid;
-  grid-template-columns: repeat(34, 1fr);
-  gap: 8px;
-  opacity: 0.74;
-}
-
-.map-dot {
-  aspect-ratio: 1;
-  border-radius: 99px;
-  background: var(--color-chalk);
-}
-
-.map-dot.dim {
-  opacity: 0.18;
-}
-
-.map-dot.hide {
-  opacity: 0;
+.hand-cloud {
+  display: block;
+  /* Full bleed. This sits outside the text container, so a plain 100% is the
+     section width; using 100vw here would add the scrollbar and overflow. */
+  width: 100%;
+  margin: 72px 0 0;
+  height: clamp(280px, 30vw, 560px);
+  /* Reference aspect is 820 x 320; height drives the fit. */
+  opacity: 0.95;
 }
 
 .section {
@@ -541,10 +529,6 @@ a {
   animation: heroFade 640ms ease 240ms both;
 }
 
-.dot-map .map-dot {
-  animation: dotPulse 2200ms ease-in-out infinite;
-  animation-delay: calc(var(--dot-index, 0) * 18ms);
-}
 
 @keyframes heroFade {
   from {
@@ -555,17 +539,6 @@ a {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes dotPulse {
-  0%,
-  100% {
-    opacity: 0.72;
-  }
-
-  50% {
-    opacity: 0.32;
   }
 }
 
@@ -740,8 +713,9 @@ a {
     padding: 24px;
   }
 
-  .dot-map {
-    gap: 5px;
+  .hand-cloud {
+    margin-top: 48px;
+    height: clamp(200px, 52vw, 320px);
   }
 }
 

@@ -14,7 +14,9 @@ import {
   Smartphone,
   Terminal,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+
+import DottedHands from "./hands/DottedHands";
 
 type Lang = "en" | "ru" | "kz";
 
@@ -298,19 +300,6 @@ const skills = {
 
 const projectTech = ["Angular", "TypeScript", "Django", "REST API"];
 
-const mapDots =
-  "0000001110000000000000111000000000" +
-  "0000111111100000000001111110000000" +
-  "0001111111110000000011111111000000" +
-  "0011111111111000000111111111100000" +
-  "0001111111110000001111111111000000" +
-  "0000111111000000000111111110000000" +
-  "0000001110000000000011111000000000" +
-  "0000000000000111000001110000011100" +
-  "0000000000001111100000000000111110" +
-  "0000000000011111110000000001111110" +
-  "0000000000001111100000000000111100";
-
 const navItems = [
   ["about", "about"],
   ["skills", "skills"],
@@ -409,8 +398,6 @@ export default function Home() {
     }, 1600);
   };
 
-  const dots = useMemo(() => mapDots.split(""), []);
-
   return (
     <main className="page-shell">
       <div className="scroll-progress" ref={progressRef} />
@@ -472,16 +459,10 @@ export default function Home() {
             </a>
           </div>
 
-          <div className="dot-map" aria-hidden="true">
-            {dots.map((dot, index) => (
-              <span
-                key={index}
-                className={`map-dot ${dot === "0" ? "hide" : index % 5 === 0 ? "dim" : ""}`}
-                style={{ "--dot-index": index} as React.CSSProperties}
-              />  
-            ))}
-          </div>
         </div>
+
+        {/* Outside the text container: the forearms must reach the screen edges. */}
+        <DottedHands />
       </section>
 
       <Section id="about" kicker={t.sections.aboutKicker} title={t.sections.aboutTitle}>
