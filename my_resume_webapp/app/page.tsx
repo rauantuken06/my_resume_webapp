@@ -454,7 +454,7 @@ export default function Home() {
               {t.common.contactMe}
               <ArrowUpRight size={16} strokeWidth={1.5} />
             </a>
-            <a className="secondary-button" href="/cv/resume.pdf">
+            <a className="secondary-button" href="/cv/resume.docx">
               {t.common.downloadCv}
             </a>
           </div>
