@@ -256,13 +256,11 @@ a {
 
 .hand-cloud {
   display: block;
-  /* Full bleed. This sits outside the text container, so a plain 100% is the
-     section width; using 100vw here would add the scrollbar and overflow. */
+  /* Full bleed: the arms reach the frame edges in the reference. */
   width: 100%;
+  /* The reference dot field is 820 x 248 reference pixels (205 x 31 cells). */
+  aspect-ratio: 820 / 248;
   margin: 72px 0 0;
-  height: clamp(280px, 30vw, 560px);
-  /* Reference aspect is 820 x 320; height drives the fit. */
-  opacity: 0.95;
 }
 
 .section {
@@ -715,7 +713,6 @@ a {
 
   .hand-cloud {
     margin-top: 48px;
-    height: clamp(200px, 52vw, 320px);
   }
 }
 

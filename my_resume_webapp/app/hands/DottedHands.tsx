@@ -2,19 +2,18 @@
 
 import { useEffect, useRef } from "react";
 
-import { buildDots, mapping, spacingFor, type Dot } from "./sampler";
-import { buildContours } from "./silhouette";
-
-const TAU = Math.PI * 2;
+import { buildDots, type Dot } from "./sampler";
 
 /**
- * STEP 1 of the tracing workflow: render the traced contours as solid white on
- * black, with no dots and no animation, so the silhouette can be compared
- * against the reference. Flip to false to restore the dotted rendering; the
- * contours in silhouette.ts are identical either way.
+ * Renders the reference halftone extracted in reference-map.ts.
+ *
+ * The dots, their positions and their base brightness all come from the
+ * reference image itself. Motion is a one-time reveal sweeping in from the
+ * arms toward the almost-touching fingertips, followed by a brightness wave
+ * that travels across the hands so the dots light up and fade in sequence
+ * rather than all at once. The wave only scales each dot's traced brightness,
+ * so the shading of the reference is preserved throughout.
  */
-const SOLID_SILHOUETTE = true;
-
 export default function DottedHands() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -27,10 +26,6 @@ export default function DottedHands() {
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // Follow the page's own ink colour rather than hard-coding a white.
-    const chalk =
-      getComputedStyle(canvas).getPropertyValue("--color-chalk").trim() || "#f3f3f3";
-
     let dots: Dot[] = [];
     let width = 0;
     let height = 0;
@@ -38,6 +33,13 @@ export default function DottedHands() {
     let start = 0;
     let lastDraw = 0;
     let running = false;
+
+    // Travelling wave. Speed is in radians per second: at 2.2 cycles across
+    // the composition this walks a band over the hands in roughly six seconds.
+    const WAVE_SPEED = 1.1;
+    // A dot dims to this fraction of its traced brightness at the wave's
+    // trough, and returns to exactly the traced value at its crest.
+    const WAVE_FLOOR = 0.5;
 
     const requestDraw = () => {
       if (running) return;
@@ -56,45 +58,22 @@ export default function DottedHands() {
       canvas.height = Math.round(height * ratio);
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
 
-      dots = SOLID_SILHOUETTE ? [] : buildDots(width, height, spacingFor(width));
+      dots = buildDots(width, height);
       lastDraw = 0;
       requestDraw();
     };
 
-    /** Fills the traced contours directly, for silhouette review. */
-    const drawSolid = () => {
-      const map = mapping(width, height);
-      const contours = buildContours();
-      context.clearRect(0, 0, width, height);
-      context.fillStyle = chalk;
-
-      for (const contour of contours) {
-        context.beginPath();
-        contour.points.forEach((point, index) => {
-          const x = (point.x - map.originX) * map.scale;
-          const y = point.y * map.scale;
-          if (index === 0) context.moveTo(x, y);
-          else context.lineTo(x, y);
-        });
-        context.closePath();
-        context.fill();
-      }
-    };
-
-    // Eight alpha buckets: one fill call each, instead of one per dot.
-    const BUCKETS = 8;
-    const buckets: Dot[][] = Array.from({ length: BUCKETS }, () => []);
+    // One fill per brightness level, instead of one per dot. The reference
+    // uses fifteen levels, so each gets its own bucket and nothing is banded.
+    const LEVELS = 16;
+    const buckets: Dot[][] = Array.from({ length: LEVELS }, () => []);
 
     const render = (time: number) => {
       running = false;
       if (!start) start = time;
 
-      if (SOLID_SILHOUETTE) {
-        drawSolid();
-        return;
-      }
-
-      // The shimmer is slow; 30fps is indistinguishable and much cheaper.
+      // The wave is slow, so 30fps is indistinguishable and far cheaper than
+      // redrawing a few thousand marks every frame.
       if (lastDraw && time - lastDraw < 30) {
         requestDraw();
         return;
@@ -103,40 +82,50 @@ export default function DottedHands() {
 
       const elapsed = time - start;
       const reveal = reduceMotion ? 1 : Math.min(1, elapsed / 1500);
-      const t = reduceMotion ? 0 : elapsed / 1000;
+      const clock = elapsed / 1000;
 
       context.clearRect(0, 0, width, height);
       for (const bucket of buckets) bucket.length = 0;
 
       for (const dot of dots) {
-        // Reveal sweeps from the arms toward the almost-touching fingertips.
         const local = (reveal - dot.delay * 0.55) / 0.45;
         if (local <= 0) continue;
         const appear = Math.min(1, local);
 
-        const wave = reduceMotion ? 0 : Math.sin(t * 1.1 + dot.phase);
-        const alpha = (0.8 + 0.2 * dot.depth) * (0.88 + 0.12 * wave) * appear;
+        // Crest returns the dot to its traced brightness; trough dims it.
+        // Phase runs with the dot's column, so the band sweeps left to right.
+        const wave = reduceMotion
+          ? 1
+          : 0.5 + 0.5 * Math.sin(clock * WAVE_SPEED - dot.phase);
+        const lit = WAVE_FLOOR + (1 - WAVE_FLOOR) * wave;
 
-        const index = Math.min(BUCKETS - 1, Math.max(0, Math.round(alpha * BUCKETS) - 1));
+        const alpha = dot.shade * lit * appear;
+        const index = Math.min(LEVELS - 1, Math.max(0, Math.round(alpha * (LEVELS - 1))));
+        if (index === 0) continue;
         buckets[index].push(dot);
       }
 
-      context.fillStyle = chalk;
-      for (let i = 0; i < BUCKETS; i += 1) {
+      context.fillStyle = "#ffffff";
+      for (let i = 1; i < LEVELS; i += 1) {
         const bucket = buckets[i];
         if (bucket.length === 0) continue;
 
-        context.globalAlpha = (i + 1) / BUCKETS;
+        context.globalAlpha = i / (LEVELS - 1);
         context.beginPath();
         for (const dot of bucket) {
-          const drift = reduceMotion ? 0 : Math.sin(t * 0.9 + dot.phase * 1.7) * 0.5;
-          context.moveTo(dot.x + dot.r, dot.y + drift);
-          context.arc(dot.x, dot.y + drift, dot.r, 0, TAU);
+          // The reference's mark is a diamond, not a circle.
+          context.moveTo(dot.x, dot.y - dot.ry);
+          context.lineTo(dot.x + dot.r, dot.y);
+          context.lineTo(dot.x, dot.y + dot.ry);
+          context.lineTo(dot.x - dot.r, dot.y);
+          context.closePath();
         }
         context.fill();
       }
       context.globalAlpha = 1;
 
+      // With reduced motion the reveal ends on the traced image and stops;
+      // otherwise the wave keeps running.
       if (reduceMotion && reveal >= 1) return;
       requestDraw();
     };
