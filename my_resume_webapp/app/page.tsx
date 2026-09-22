@@ -404,9 +404,7 @@ export default function Home() {
       <MouseTrail />
       <header className="header">
         <div className="container header-inner">
-          <a className="brand" href="#top" aria-label="Rauan Tuken home">
-            Rauan Tuken
-          </a>
+          <img src={"/logo/logo.png"} className="logo-img" alt="Rauan Tuken"></img>
 
           <nav className="nav" aria-label="Primary navigation">
             {navItems.map(([key, href]) => (

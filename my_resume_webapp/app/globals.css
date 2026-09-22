@@ -96,6 +96,14 @@ a {
   color: var(--color-chalk);
 }
 
+.logo-img {
+  height: 50px;
+  padding-left: 165px;
+  filter: brightness(0) invert(1)
+  drop-shadow(0 0 6px rgba(0, 150, 240, 0.85))
+  drop-shadow(0 0 18px rgba(0, 150, 240, 0.5));
+}
+
 .nav {
   display: flex;
   align-items: center;
