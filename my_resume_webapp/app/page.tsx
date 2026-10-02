@@ -2,6 +2,7 @@
 
 import {
   ArrowUpRight,
+  AtSign,
   BookOpen,
   BriefcaseBusiness,
   Code2,
@@ -10,7 +11,6 @@ import {
   GraduationCap,
   Languages,
   Mail,
-  Phone,
   Smartphone,
   Terminal,
 } from "lucide-react";
@@ -37,7 +37,7 @@ const dictionaries = {
       viewProject: "View project",
       location: "Location",
       email: "Email",
-      phone: "Phone",
+      instagram: "Instagram",
       github: "GitHub",
     },
     hero: {
@@ -124,7 +124,7 @@ const dictionaries = {
       viewProject: "Открыть проект",
       location: "Локация",
       email: "Email",
-      phone: "Телефон",
+      instagram: "Instagram",
       github: "GitHub",
     },
     hero: {
@@ -211,7 +211,7 @@ const dictionaries = {
       viewProject: "Жобаны ашу",
       location: "Орналасқан жері",
       email: "Email",
-      phone: "Телефон",
+      instagram: "Instagram",
       github: "GitHub",
     },
     hero: {
@@ -567,11 +567,16 @@ export default function Home() {
               <span className="fact-value">rauantuken3@gmail.com</span>
             </span>
           </a>
-          <a className="contact-link" href="tel:+77056933955">
-            <Phone size={28} strokeWidth={1.5} />
+          <a
+            className="contact-link"
+            href="https://instagram.com/qwazzymelon"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <AtSign size={28} strokeWidth={1.5} />
             <span>
-              <span className="fact-label">{t.common.phone}</span>
-              <span className="fact-value">+7 705 693 3955</span>
+              <span className="fact-label">{t.common.instagram}</span>
+              <span className="fact-value">@qwazzymelon</span>
             </span>
           </a>
           <a
