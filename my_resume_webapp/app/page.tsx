@@ -11,8 +11,10 @@ import {
   GraduationCap,
   Languages,
   Mail,
+  Menu,
   Smartphone,
   Terminal,
+  X,
 } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
@@ -342,6 +344,9 @@ export default function Home() {
 
   const [activeSection, setActiveSection] = useState<(typeof sectionIds)[number]>("about");
   const [copied, setCopied] = useState(false);
+  // Открыта ли мобильная панель навигации. На десктопе значение не влияет
+  // ни на что: там .header-menu всегда раскрыт через display: contents.
+  const [menuOpen, setMenuOpen] = useState(false);
   const progressRef = useRef<HTMLDivElement | null>(null);
 
   const changeLang = (nextLang: Lang) => {
@@ -406,31 +411,51 @@ export default function Home() {
         <div className="container header-inner">
           <img src={"/logo/logo.png"} className="logo-img" alt="Rauan Tuken"></img>
 
-          <nav className="nav" aria-label="Primary navigation">
-            {navItems.map(([key, href]) => (
-              <a key={key} href={`#${href}`}>
-                {t.nav[key]}
-              </a>
-            ))}
-          </nav>
+          <button
+            className="menu-toggle"
+            type="button"
+            aria-expanded={menuOpen}
+            aria-controls="site-menu"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            {menuOpen ? <X size={22} strokeWidth={1.5} /> : <Menu size={22} strokeWidth={1.5} />}
+          </button>
 
-          <div className="header-actions">
-            <div className="lang-switcher" aria-label="Language switcher">
-              {(["en", "ru", "kz"] as const).map((item) => (
-                <button
-                  key={item}
-                  className={`lang-button ${lang === item ? "active": ""}`}
-                  type="button"
-                  onClick={() => changeLang(item)}
-                  aria-pressed={lang === item}
-                >
-                  {item.toUpperCase()}
-                </button>  
+          {/* На десктопе этот блок display: contents, то есть навигация и
+              кнопки остаются прямыми ячейками сетки шапки. На мобильных он
+              становится раскрывающейся панелью под логотипом. */}
+          <div className={`header-menu ${menuOpen ? "open" : ""}`} id="site-menu">
+            <nav className="nav" aria-label="Primary navigation">
+              {navItems.map(([key, href]) => (
+                <a key={key} href={`#${href}`} onClick={() => setMenuOpen(false)}>
+                  {t.nav[key]}
+                </a>
               ))}
+            </nav>
+
+            <div className="header-actions">
+              <div className="lang-switcher" aria-label="Language switcher">
+                {(["en", "ru", "kz"] as const).map((item) => (
+                  <button
+                    key={item}
+                    className={`lang-button ${lang === item ? "active" : ""}`}
+                    type="button"
+                    onClick={() => changeLang(item)}
+                    aria-pressed={lang === item}
+                  >
+                    {item.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              <a
+                className="secondary-button"
+                href="#contact"
+                onClick={() => setMenuOpen(false)}
+              >
+                {t.common.contactMe}
+              </a>
             </div>
-            <a className="secondary-button" href="#contact">
-              {t.common.contactMe}
-            </a>
           </div>
         </div>
       </header>
