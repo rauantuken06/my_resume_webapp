@@ -330,6 +330,9 @@ a {
 }
 
 .fact-label {
+  /* В контактах это <span>, а значит строчный элемент: без block подпись и
+     значение склеиваются в одну строку. */
+  display: block;
   margin-bottom: 6px;
   color: var(--color-smoke);
   font-family: var(--font-input), ui-monospace, monospace;
@@ -338,6 +341,7 @@ a {
 }
 
 .fact-value {
+  display: block;
   color: var(--color-chalk);
   font-size: 17px;
   line-height: 1.35;
@@ -654,6 +658,29 @@ a {
     flex-wrap: wrap;
   }
 
+  /* На десктопе отступ сдвигает логотип внутри левой колонки сетки. Когда
+     сетка схлопывается в одну колонку, он просто уводит логотип вбок. */
+  .logo-img {
+    height: 40px;
+    padding-left: 0;
+  }
+
+  /* Иначе хедер съедает около трети первого экрана. */
+  .header-inner {
+    gap: 14px;
+    padding: 16px 0;
+  }
+
+  .nav {
+    gap: 10px 18px;
+  }
+
+  /* Фиксированная высота нужна для колонок на десктопе; в столбик она
+     превращается в три больших пустых блока. */
+  .contact-link {
+    min-height: 0;
+  }
+
   .display-title {
     font-size: 44px;
   }
@@ -721,6 +748,16 @@ a {
 
   .hand-cloud {
     margin-top: 48px;
+  }
+
+  .nav a {
+    font-size: 12px;
+  }
+
+  /* В строку две надписи уже не помещаются без риска переноса вплотную. */
+  .footer-inner {
+    flex-direction: column;
+    gap: 8px;
   }
 }
 
